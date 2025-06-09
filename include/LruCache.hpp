@@ -40,7 +40,7 @@ class LruCache : public CachePolicy<Key, Value> {
 public:
     using Node    = LruNode<Key, Value>;
     using NodePtr = std::shared_ptr<Node>;
-    using NodeMap = std::unordered_map<Key, NodePtr>;
+    using NodeMap = std::unordered_map<Key, NodePtr>;///哈希表
 
     explicit LruCache(int capacity) : m_capacity(capacity) {
         assert(capacity >= 0 && "Capacity must be non-negative");
@@ -141,9 +141,19 @@ private:
     }
 
     void removeNode(NodePtr node) {
+        /*
+        1. weak_ptr 的 lock
+            用途：从 std::weak_ptr 安全获取关联的 shared_ptr
+            若对象仍存在（引用计数 > 0），返回持有该对象的 shared_ptr
+            若对象已被销毁，返回空的 shared_ptr
+        2. weak_ptr 以及 shared_ptr 的reset
+            用途：释放 shared_ptr 或 weak_ptr 当前管理的对象所有权
+            减少引用计数，若计数归零则销毁对象
+            将指针置为空
+        */
         auto prevNode = node->prev.lock();
         auto nextNode = node->next;
-        if (prevNode && nextNode) {
+        if (prevNode && nextNode) { //前后均非空时
             prevNode->next = nextNode;
             nextNode->prev = prevNode;
         }
