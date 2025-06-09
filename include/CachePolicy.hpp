@@ -11,3 +11,5 @@ public:
     virtual void remove(const Key& key) = 0;
     virtual void removeAll() = 0;
 };
+
+//注意： 子类继承时，必须全部实现，否则编译器会认为你的子类为纯虚类
