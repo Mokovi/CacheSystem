@@ -51,6 +51,23 @@ public:
         touchCountOnly(key);
         return false;
     }
+
+    /// @brief 移出特定缓存
+    /// @param key 
+    void remove(const Key& key) override {
+        std::lock_guard<std::mutex> lk(mtx_);
+        LruCache<Key,Value>::remove(key);
+        history_.remove(key);
+        historyStore_.erase(key);
+    }
+
+    /// @brief 清空缓存
+    void removeAll() override {
+        std::lock_guard<std::mutex> lk(mtx_);
+        LruCache<Key,Value>::removeAll();
+        history_.removeAll();
+        historyStore_.clear();
+    }
     
 
 private:

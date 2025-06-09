@@ -25,7 +25,7 @@
 */
 
 template<typename Key, typename Value, size_t NumShards = 16>
-class HashLruKCache {
+class HashLruKCache : public CachePolicy {
 public:
     /// @brief 算法构造函数
     /// @param k 数据存入主缓存访问次数设定
@@ -43,7 +43,7 @@ public:
     /// @brief 更新/添加缓存数据
     /// @param key 键
     /// @param value 值
-    void put(const Key& key, const Value& value) {
+    void put(const Key& key, const Value& value) override {
         auto& shard = getShard(key);
         std::lock_guard<std::mutex> lk(shard.mtx);
         shard.cache.put(key, value);
@@ -53,7 +53,7 @@ public:
     /// @param key 键
     /// @param value 值
     /// @return 从主缓存中取到值则返回True,同时修改传参value;不在缓存中则返回false.
-    bool get(const Key& key, Value& value) {
+    bool get(const Key& key, Value& value) override {
         auto& shard = getShard(key);
         std::lock_guard<std::mutex> lk(shard.mtx);
         return shard.cache.get(key, value);
@@ -61,14 +61,14 @@ public:
 
     /// @brief 删除特定缓存
     /// @param key 键
-    void remove(const Key& key) {
+    void remove(const Key& key) override {
         auto& shard = getShard(key);
         std::lock_guard<std::mutex> lk(shard.mtx);
         shard.cache.remove(key);
     }
 
     /// @brief 清空缓存
-    void clearAll() {
+    void removeAll() override {
         for (auto& shard : shards_) {
             std::lock_guard<std::mutex> lk(shard.mtx);
             shard.cache.removeAll();

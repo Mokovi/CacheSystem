@@ -1,6 +1,6 @@
 #pragma once
 
-/// 缓存策略接口（支持扩展 LFU/FIFO）
+/// 缓存策略接口
 template<typename Key, typename Value>
 class CachePolicy {
 public:
