@@ -21,22 +21,24 @@ public:
     {
         size_t base = totalCapacity / shardCount;
         size_t rem  = totalCapacity % shardCount;
-        shards_.reserve(shardCount_);
+        shards_.reserve(shardCount_);  // 现在只移动指针，安全
+
         for (size_t i = 0; i < shardCount_; ++i) {
-            // 最后一个分区多一些
             size_t cap = base + (i + 1 == shardCount_ ? rem : 0);
-            shards_.emplace_back(cap, maxAvgFreqLimit);
+            shards_.emplace_back(
+                std::make_unique<Shard>(cap, maxAvgFreqLimit)
+            );
         }
     }
 
     void put(const Key& key, const Value& value) override {
-        auto& shard = getShard(key);
+        Shard& shard = getShard(key);
         std::lock_guard<std::mutex> guard(shard.mtx);
         shard.cache.put(key, value);
     }
 
     bool get(const Key& key, Value& value) override {
-        auto& shard = getShard(key);
+        Shard& shard = getShard(key);
         std::lock_guard<std::mutex> guard(shard.mtx);
         return shard.cache.get(key, value);
     }
@@ -47,15 +49,15 @@ public:
     }
 
     void remove(const Key& key) override {
-        auto& shard = getShard(key);
+        Shard& shard = getShard(key);
         std::lock_guard<std::mutex> guard(shard.mtx);
         shard.cache.remove(key);
     }
 
     void removeAll() override {
-        for (auto& shard : shards_) {
-            std::lock_guard<std::mutex> guard(shard.mtx);
-            shard.cache.removeAll();
+        for (auto& ptr : shards_) {
+            std::lock_guard<std::mutex> guard(ptr->mtx);
+            ptr->cache.removeAll();
         }
     }
 
@@ -66,14 +68,19 @@ private:
         Shard(size_t capacity, double avgLimit)
             : cache(int(capacity), avgLimit)
         {}
+        // 禁用拷贝/移动
+        Shard(const Shard&) = delete;
+        Shard& operator=(const Shard&) = delete;
     };
 
+    // 返回对分片的引用
     Shard& getShard(const Key& key) {
         size_t h = hasher_(key);
-        return shards_[h % shardCount_];
+        return *shards_[h % shardCount_];
     }
 
-    size_t                     shardCount_;
-    std::vector<Shard>         shards_;
-    std::hash<Key>             hasher_;
+private:
+    size_t                                      shardCount_;
+    std::vector<std::unique_ptr<Shard>>         shards_; //存指针，避免出现mutex的复制/移动
+    std::hash<Key>                              hasher_;
 };

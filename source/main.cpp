@@ -1,37 +1,38 @@
 #include "CacheBenchmark.hpp"
-#include "LruCache.hpp"
-#include "LruKCache.hpp"
-#include "HashLruKCache.hpp"
 #include "LfuCache.hpp"
 #include "LfuAgingCache.hpp"
 #include "HashLfuAgingCache.hpp"
+#include "LruCache.hpp"
+#include "LruKCache.hpp"
+#include "HashLruKCache.hpp"
 
 int main() {
-    // constexpr size_t THREADS    = 8;
-    // constexpr size_t KEY_RANGE  = 1000;
-    // constexpr size_t TOTAL_OPS  = 1'000'000;
-    // constexpr size_t SCAN_RANGE        = 5000;  // 全量扫描范围 M
-    // constexpr size_t HOTSPOT_RANGE     = 500;   // 热点区间 H
-    // constexpr size_t HOTSPOT_ACCESSES  = 20000; // 热点访问次数
+    CacheBenchmarkSuite<int,int> suite;
 
-    // // 1) LRU
-    // LruCache<int,int> lru(160);
-    // CacheBenchmark<int,int> bench1(lru, THREADS);
+    // 注册各个策略
+    suite.addPolicy("LFU", []{ return std::make_unique<LfuCache<int,int>>(10000); });
+    suite.addPolicy("LFU-Aging", []{ return std::make_unique<LfuAgingCache<int,int>>(10000); });
+    suite.addPolicy("HashLFU-Aging", []{ return std::make_unique<HashLfuAgingCache<int,int>>(10000, 8); });
+    suite.addPolicy("LRU", []{ return std::make_unique<LruCache<int,int>>(10000); });
+    suite.addPolicy("LRU-K", []{ return std::make_unique<LruKCache<int,int>>(2,1000,1000); });
+    suite.addPolicy("HashLRU-K", []{ return std::make_unique<HashLruKCache<int,int, 8>>(2,125,125); });
 
-    // // 2) LRU-K (K=2)
-    // LruKCache<int,int> lruk(2, 160, 160);
-    // CacheBenchmark<int,int> bench2(lruk, THREADS);
+    // 随机模式对比
+    suite.runRandomAll(
+        /*key_range=*/10000,
+        /*total_ops=*/200000,
+        /*get_ratio=*/0.8,
+        /*thread_count=*/4
+    );
 
-    // // 3) Hash-LRU-K
-    // HashLruKCache<int,int,16> hash_lruk(2, 10, 10);
-    // CacheBenchmark<int,int> bench3(hash_lruk, THREADS);
-
-    // bench1.runRandomPattern(KEY_RANGE, TOTAL_OPS);
-    // bench2.runRandomPattern(KEY_RANGE, TOTAL_OPS);
-    // bench3.runRandomPattern(KEY_RANGE, TOTAL_OPS);
-    // bench1.runMixedPattern(SCAN_RANGE, HOTSPOT_RANGE, HOTSPOT_ACCESSES);
-    // bench2.runMixedPattern(SCAN_RANGE, HOTSPOT_RANGE, HOTSPOT_ACCESSES);
-    // bench3.runMixedPattern(SCAN_RANGE, HOTSPOT_RANGE, HOTSPOT_ACCESSES);
+    // 混合模式对比
+    suite.runMixedAll(
+        /*scan_range=*/5000,
+        /*hotspot_range=*/1000,
+        /*hotspot_accesses=*/50000,
+        /*put_ratio=*/0.1,
+        /*thread_count=*/4
+    );
 
     return 0;
 }
