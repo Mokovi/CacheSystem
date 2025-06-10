@@ -50,6 +50,7 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "shared_mutex": "cpp"
     }
 }

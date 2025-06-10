@@ -4,6 +4,7 @@
 #include "HashLruKCache.hpp"
 #include "LfuCache.hpp"
 #include "LfuAgingCache.hpp"
+#include "HashLfuAgingCache.hpp"
 
 int main() {
     // constexpr size_t THREADS    = 8;
@@ -31,20 +32,6 @@ int main() {
     // bench1.runMixedPattern(SCAN_RANGE, HOTSPOT_RANGE, HOTSPOT_ACCESSES);
     // bench2.runMixedPattern(SCAN_RANGE, HOTSPOT_RANGE, HOTSPOT_ACCESSES);
     // bench3.runMixedPattern(SCAN_RANGE, HOTSPOT_RANGE, HOTSPOT_ACCESSES);
-    LfuAgingCache<int,int> cache(3);
-    cache.put(1,1);
-    cache.put(1,1);
-    cache.put(2,2);
-    cache.put(3,3);
-    cache.put(4,4);
-    if(cache.get(1))
-        std::cout<< "命中\n";
-    else
-        std::cout<< "未命中\n";
-    if(cache.get(2))
-        std::cout<< "命中\n";
-    else
-        std::cout<< "未命中\n";
 
     return 0;
 }
