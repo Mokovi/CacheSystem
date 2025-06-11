@@ -51,6 +51,8 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "map": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "list": "cpp",
+        "unordered_set": "cpp"
     }
 }

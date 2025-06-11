@@ -5,6 +5,7 @@
 #include "LruCache.hpp"
 #include "LruKCache.hpp"
 #include "HashLruKCache.hpp"
+#include "ARCache.hpp"
 
 int main() {
     CacheBenchmarkSuite<int,int> suite;
@@ -16,6 +17,7 @@ int main() {
     suite.addPolicy("LRU", []{ return std::make_unique<LruCache<int,int>>(10000); });
     suite.addPolicy("LRU-K", []{ return std::make_unique<LruKCache<int,int>>(2,1000,1000); });
     suite.addPolicy("HashLRU-K", []{ return std::make_unique<HashLruKCache<int,int, 8>>(2,125,125); });
+    suite.addPolicy("ARC",[](){return std::make_unique<ARCCache<int,int>>(1000); });
 
     // 随机模式对比
     suite.runRandomAll(
